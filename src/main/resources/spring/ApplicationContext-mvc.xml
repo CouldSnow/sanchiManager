@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop" 
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd	
+		http://www.springframework.org/schema/aop 	http://www.springframework.org/schema/aop/spring-aop.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+	
+	<!-- springmvc配置文件。包含网站跳转逻辑的控制 
+      对于 servlet配置文件里面应该初始化的东西，除了视图的解析方式、静态资源文件的存放位置、controller的初始化方式之外，
+      其他的都不应该放在 servlet 配置文件中，应为它只负责 请求的转发，返回结果的解析以及静态资源文件的解析，
+      其他的对象的初始化，定时任务...都不应该放到这个配置文件下进行管理。
+-->
+<!-- 两个标准配置 -->
+
+<!-- 能支持springmvc更高级的一些功能 JSR303校验，ajax-->
+	<mvc:annotation-driven/>	
+	<!-- springmvc不能处理的请求交个tomcat -->
+	<mvc:default-servlet-handler/>
+	
+	<context:component-scan base-package="com.dishanqian.sanchiManager.controller" />
+
+	<!-- 对静态资源文件的访问  restful-->
+	<!-- spring 4.3.7 可能会误报红叉，但不影响正常运行 -->   
+	<mvc:resources mapping="/static/**" location="/static/" />
+	<mvc:resources mapping="/plugins/**" location="/plugins/" /> 
+
+	<!-- 访问拦截  -->  
+ <!--  	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**/**"/>
+			<bean class="com.fh.interceptor.LoginHandlerInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors> -->
+	 
+	<!-- 配置SpringMVC的视图解析器 -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/jsp/"/>
+		<property name="suffix" value=".jsp"/>
+	</bean>
+	
+	<!-- 自定义异常类 -->
+	<!-- <bean id="exceptionResolver" class="com.zy.resolver.MyExceptionResolver"></bean> -->
+	
+	<!-- 上传拦截，如最大上传值及最小上传值 -->
+	  <bean id="multipartResolver"   class="org.springframework.web.multipart.commons.CommonsMultipartResolver" >   
+		  <property name="maxUploadSize">    
+	          <value>104857600</value>    
+	       </property>   
+	        <property name="maxInMemorySize">    
+	            <value>4096</value>    
+	        </property>   
+	         <property name="defaultEncoding">    
+	            <value>utf-8</value>    
+	        </property> 
+     </bean>  
+	
+	<!-- 返回json 方法一 需要导入 fastjson.jar包  features 一定要加 不然数据会丢失-->  
+   <mvc:annotation-driven>
+        <mvc:message-converters register-defaults="true">
+            <!-- 避免IE执行AJAX时,返回JSON出现下载文件 -->
+            <bean id="fastJsonHttpMessageConverter" class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                <property name="supportedMediaTypes">
+                    <list>
+                        <!-- 这里顺序不能反，一定先写text/html,不然ie下出现下载提示 -->
+                        <value>text/html;charset=UTF-8</value>
+                        <value>application/json;charset=UTF-8</value>
+                    </list>
+                </property>
+                  <property name="features">
+          			  <array>
+              			 <value>DisableCircularReferenceDetect</value>
+            			</array>
+         		</property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+    
+    
+    <!-- 开启shiro注解-->
+    <!-- 开启对类代理 -->
+    <aop:config proxy-target-class="true"></aop:config>
+    
+    <!-- 开启shiro注解 -->
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+    	<property name="securityManager" ref="securityManager"></property>
+    </bean>
+</beans>
